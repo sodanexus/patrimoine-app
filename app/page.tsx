@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell } from "recharts";
 import { TrendingUp, Wallet, PlusCircle, MinusCircle, Bitcoin, PieChart as PieIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,16 @@ function weightedExpectedReturn(legs: { value: number; exp: number }[]) {
   if (total <= 0) return 0;
   return legs.reduce((s, l) => s + (l.value * l.exp), 0) / total;
 }
+
+// 🎨 Couleurs fixes pour l'allocation
+const COLORS = [
+  "#4F46E5", // Assurance-vie
+  "#F59E0B", // Métaux précieux
+  "#10B981", // PEA
+  "#3B82F6", // Livret
+  "#EC4899", // CTO
+  "#F97316", // Crypto
+];
 
 export default function PatrimoineApp() {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
@@ -245,9 +254,13 @@ export default function PatrimoineApp() {
                       nameKey="name"
                       innerRadius={60}
                       outerRadius={100}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
                       labelLine={false}
-                    />
+                    >
+                      {allocationData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip formatter={(v: any) => fmtEUR(v as number)} />
                     <Legend />
                   </PieChart>
