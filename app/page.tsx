@@ -70,12 +70,12 @@ export default function PatrimoineApp() {
   type PocketKey = "assurance" | "metaux" | "pea" | "livret" | "cto" | "crypto";
   type Pocket = { label: string; initial: number; monthly: number; exp: number };
   const [pockets, setPockets] = useState<Record<PocketKey, Pocket>>({
-    assurance: { label: "Assurance-vie", initial: 0, monthly: 0, exp: 0.035 },
-    metaux:    { label: "Métaux précieux", initial: 0, monthly: 0, exp: 0.02 },
-    pea:       { label: "PEA", initial: 0, monthly: 0, exp: 0.06 },
-    livret:    { label: "Livret", initial: 0, monthly: 0, exp: 0.03 },
-    cto:       { label: "CTO", initial: 0, monthly: 0, exp: 0.05 },
-    crypto:    { label: "Crypto", initial: 0, monthly: 0, exp: 0.10 },
+    assurance: { label: "Assurance-vie", initial: 0, monthly: 0, exp: 0.06 },
+    metaux:    { label: "Métaux précieux", initial: 0, monthly: 0, exp: 0.07 },
+    pea:       { label: "Plan d'épargne en actions (PEA)", initial: 0, monthly: 0, exp: 0.07 },
+    livret:    { label: "Livret", initial: 0, monthly: 0, exp: 0.017 },
+    cto:       { label: "Compte-Titre (CTO)", initial: 0, monthly: 0, exp: 0.08 },
+    crypto:    { label: "Bitcoin", initial: 0, monthly: 0, exp: 0.10 },
   });
   const [btcHold, setBtcHold] = useState(0);
   function updatePocket<K extends PocketKey>(key: K, patch: Partial<Pocket>) {
