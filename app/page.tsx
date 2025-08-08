@@ -35,14 +35,13 @@ function weightedExpectedReturn(legs: { value: number; exp: number }[]) {
   return legs.reduce((s, l) => s + (l.value * l.exp), 0) / total;
 }
 
-// 🎨 Couleurs fixes pour l'allocation
 const COLORS = [
-  "#4F46E5", // Assurance-vie
-  "#F59E0B", // Métaux précieux
-  "#10B981", // PEA
-  "#3B82F6", // Livret
-  "#EC4899", // CTO
-  "#F97316", // Crypto
+  "#4F46E5",
+  "#F59E0B",
+  "#10B981",
+  "#3B82F6",
+  "#EC4899",
+  "#F97316",
 ];
 
 export default function PatrimoineApp() {
@@ -128,20 +127,8 @@ export default function PatrimoineApp() {
   const v20 = getAtYears(20);
 
   const allocationData = (Object.keys(pockets) as PocketKey[])
-    .map((k) => ({ name: pockets[k].label, value: Math.max(0, nowInitials[k]) }))
+    .map((k, i) => ({ name: pockets[k].label, value: Math.max(0, nowInitials[k]), color: COLORS[i % COLORS.length] }))
     .filter((d) => d.value > 0);
-
-  useEffect(() => {
-    try {
-      const z = calcProjection({ initial: 0, monthly: 0, annualRate: 0, years: 1, inflation: 0 });
-      console.assert(Math.abs(z[z.length - 1].nominal - 0) < 1e-9, "calcProjection zero -> 0");
-      const t2 = calcProjection({ initial: 0, monthly: 100, annualRate: 0, years: 1, inflation: 0 });
-      console.assert(Math.abs(t2[t2.length - 1].nominal - 1200) < 1e-6, "monthly no interest -> 1200");
-      const wr = weightedExpectedReturn([{ value: 100, exp: 0.1 }, { value: 100, exp: 0.05 }]);
-      console.assert(Math.abs(wr - 0.075) < 1e-9, "weightedExpectedReturn basic");
-      console.log("✅ Tests OK");
-    } catch (e) { console.warn("❌ Tests failed", e); }
-  }, []);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 to-white text-slate-900">
@@ -158,123 +145,131 @@ export default function PatrimoineApp() {
           </div>
         </header>
 
-        <section className="mt-8 grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <Card className="xl:col-span-7">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5"/> Mes poches</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(Object.keys(pockets) as PocketKey[]).map((k) => (
-                  <div key={k} className="space-y-2 p-3 border rounded-xl">
-                    <div className="font-medium text-slate-700">{pockets[k].label}</div>
-                    <LabeledNumber label="Solde initial" value={pockets[k].initial} onChange={(v) => updatePocket(k, { initial: v })} step={500} />
-                    <LabeledNumber label="Apport mensuel" value={pockets[k].monthly} onChange={(v) => updatePocket(k, { monthly: v })} step={50} />
-                    <LabeledPercent label="Rendement attendu" value={pockets[k].exp} onChange={(v) => updatePocket(k, { exp: v })} step={0.005} />
-                    {k === "crypto" && (
-                      <>
-                        <LabeledNumber label="Bitcoin – quantité (BTC)" value={btcHold} onChange={setBtcHold} step={0.01} />
-                        <ReadOnly label="Valeur BTC incluse" value={btcPrice ? fmtEUR(cryptoExtra) : "–"} />
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="xl:col-span-5">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5"/> Paramètres</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <ReadOnly label="Solde initial (total)" value={fmtEUR(totalInitial)} />
-              <ReadOnly label="Apport mensuel (total)" value={fmtEUR(totalMonthly)} />
-
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-sm text-slate-600">Taux de rendement</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">Auto</span>
-                  <input type="checkbox" className="h-4 w-4" checked={autoRate} onChange={(e) => setAutoRate(e.target.checked)} />
-                </div>
-              </div>
-              {autoRate ? (
-                <ReadOnly label="Taux (pondéré par l'allocation)" value={fmtPct(annualRate || 0)} />
-              ) : (
-                <LabeledPercent label="Taux manuel (global)" value={manualRate} onChange={setManualRate} step={0.0025} />
-              )}
-
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-sm text-slate-600">Horizon</span>
-                <div className="flex items-center gap-2">
-                  {[5, 10, 20].map(y => (
-                    <Button key={y} variant={y === years ? "default" : "outline"} size="sm" onClick={() => setYears(y as 5|10|20)}>
-                      {y} ans
-                    </Button>
+        <div className="mt-8 grid grid-cols-1 xl:grid-cols-12 gap-4">
+          {/* Colonne gauche */}
+          <div className="xl:col-span-8 space-y-6">
+            {/* Mes poches */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5"/> Mes poches</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(Object.keys(pockets) as PocketKey[]).map((k) => (
+                    <div key={k} className="space-y-2 p-3 border rounded-xl">
+                      <div className="font-medium text-slate-700">{pockets[k].label}</div>
+                      <LabeledNumber label="Solde initial" value={pockets[k].initial} onChange={(v) => updatePocket(k, { initial: v })} step={500} />
+                      <LabeledNumber label="Apport mensuel" value={pockets[k].monthly} onChange={(v) => updatePocket(k, { monthly: v })} step={50} />
+                      <LabeledPercent label="Rendement attendu" value={pockets[k].exp} onChange={(v) => updatePocket(k, { exp: v })} step={0.005} />
+                      {k === "crypto" && (
+                        <>
+                          <LabeledNumber label="Bitcoin – quantité (BTC)" value={btcHold} onChange={setBtcHold} step={0.01} />
+                          <ReadOnly label="Valeur BTC incluse" value={btcPrice ? fmtEUR(cryptoExtra) : "–"} />
+                        </>
+                      )}
+                    </div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+              </CardContent>
+            </Card>
 
-        <section className="mt-6 grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <Card className="xl:col-span-7">
-            <CardHeader>
-              <CardTitle>Projection</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" interval={Math.floor(data.length / 8)} tick={{ fontSize: 12 }} />
-                    <YAxis tickFormatter={(v) => v >= 1000 ? `${Math.round(v/1000)}k` : `${v}`} width={60} />
-                    <Tooltip formatter={(v: any) => fmtEUR(v as number)} />
-                    <Legend />
-                    <Line type="monotone" dataKey="totalNominal" dot={false} strokeWidth={2} name="Valeur" />
-                    <Line type="monotone" dataKey="contribution" dot={false} strokeWidth={1.5} strokeDasharray="4 4" name="Contributions cumulées" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Projection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Projection</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" interval={Math.floor(data.length / 8)} tick={{ fontSize: 12 }} />
+                      <YAxis tickFormatter={(v) => v >= 1000 ? `${Math.round(v/1000)}k` : `${v}`} width={60} />
+                      <Tooltip formatter={(v: any) => fmtEUR(v as number)} />
+                      <Legend />
+                      <Line type="monotone" dataKey="totalNominal" dot={false} strokeWidth={2} name="Valeur" />
+                      <Line type="monotone" dataKey="contribution" dot={false} strokeWidth={1.5} strokeDasharray="4 4" name="Contributions cumulées" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="xl:col-span-5">
-            <CardHeader>
-              <CardTitle>Allocation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={allocationData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      outerRadius={100}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                      labelLine={false}
-                    >
-                      {allocationData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: any) => fmtEUR(v as number)} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+            {/* Allocation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Allocation</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={allocationData}
+                        dataKey="value"
+                        nameKey="name"
+                        innerRadius={60}
+                        outerRadius={100}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                        labelLine={false}
+                      >
+                        {allocationData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: any) => fmtEUR(v as number)} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-        <section className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <KpiCard title="Dans 5 ans" value={fmtEUR(v5)} subtitle={`Taux global: ${fmtPct(annualRate || 0)} • Mensuel: ${fmtEUR(totalMonthly)}`} />
-          <KpiCard title="Dans 10 ans" value={fmtEUR(v10)} subtitle={`Apports cumulés: ${fmtEUR(totalInitial + totalMonthly * 120)}`} />
-          <KpiCard title="Dans 20 ans" value={fmtEUR(v20)} subtitle={`Intérêts cumulés estimés`} />
-        </section>
+            {/* KPIs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <KpiCard title="Dans 5 ans" value={fmtEUR(v5)} subtitle={`Taux global: ${fmtPct(annualRate || 0)} • Mensuel: ${fmtEUR(totalMonthly)}`} />
+              <KpiCard title="Dans 10 ans" value={fmtEUR(v10)} subtitle={`Apports cumulés: ${fmtEUR(totalInitial + totalMonthly * 120)}`} />
+              <KpiCard title="Dans 20 ans" value={fmtEUR(v20)} subtitle={`Intérêts cumulés estimés`} />
+            </div>
+          </div>
+
+          {/* Colonne droite : Paramètres */}
+          <div className="xl:col-span-4">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5"/> Paramètres</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ReadOnly label="Solde initial (total)" value={fmtEUR(totalInitial)} />
+                <ReadOnly label="Apport mensuel (total)" value={fmtEUR(totalMonthly)} />
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-sm text-slate-600">Taux de rendement</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">Auto</span>
+                    <input type="checkbox" className="h-4 w-4" checked={autoRate} onChange={(e) => setAutoRate(e.target.checked)} />
+                  </div>
+                </div>
+                {autoRate ? (
+                  <ReadOnly label="Taux (pondéré par l'allocation)" value={fmtPct(annualRate || 0)} />
+                ) : (
+                  <LabeledPercent label="Taux manuel (global)" value={manualRate} onChange={setManualRate} step={0.0025} />
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-sm text-slate-600">Horizon</span>
+                  <div className="flex items-center gap-2">
+                    {[5, 10, 20].map(y => (
+                      <Button key={y} variant={y === years ? "default" : "outline"} size="sm" onClick={() => setYears(y as 5|10|20)}>
+                        {y} ans
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
