@@ -73,7 +73,7 @@ export default function PatrimoineApp() {
     assurance: { label: "Assurance-vie", initial: 0, monthly: 0, exp: 0.06 },
     metaux:    { label: "Métaux précieux", initial: 0, monthly: 0, exp: 0.07 },
     pea:       { label: "Plan d'Épargne en Actions (PEA)", initial: 0, monthly: 0, exp: 0.07 },
-    livret:    { label: "Livret", initial: 0, monthly: 0, exp: 0.017 },
+    livret:    { label: "Livrets d’Épargne Réglementée", initial: 0, monthly: 0, exp: 0.017 },
     cto:       { label: "Compte-Titre (CTO)", initial: 0, monthly: 0, exp: 0.08 },
     crypto:    { label: "Bitcoin", initial: 0, monthly: 0, exp: 0.10 },
   });
